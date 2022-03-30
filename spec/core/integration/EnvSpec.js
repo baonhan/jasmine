@@ -1339,9 +1339,9 @@ describe('Env integration', function() {
 
       env.execute(null, function() {
         expect(reporter.specDone).toHaveBeenCalledTimes(1);
-        expect(reporter.specDone.calls.argsFor(0)[0]).toEqual(
-          jasmine.objectContaining({ status: 'passed' })
-        );
+        const event = reporter.specDone.calls.argsFor(0)[0];
+        jasmine.debugLog('Spec result: ' + jasmine.basicPrettyPrinter_(event));
+        expect(event).toEqual(jasmine.objectContaining({ status: 'passed' }));
         jasmine.clock().tick(1);
         realSetTimeout(done);
       });
