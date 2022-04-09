@@ -3,7 +3,6 @@ getJasmineRequireObj().Expector = function(j$) {
     this.matchersUtil = options.matchersUtil || {
       buildFailureMessage: function() {}
     };
-    this.customEqualityTesters = options.customEqualityTesters || [];
     this.actual = options.actual;
     this.addExpectationResult = options.addExpectationResult || function() {};
     this.filters = new j$.ExpectationFilterChain();
@@ -20,7 +19,8 @@ getJasmineRequireObj().Expector = function(j$) {
 
     this.args.unshift(this.actual);
 
-    var matcher = matcherFactory(this.matchersUtil, this.customEqualityTesters);
+    var matcher = matcherFactory(this.matchersUtil);
+
     var comparisonFunc = this.filters.selectComparisonFunc(matcher);
     return comparisonFunc || matcher.compare;
   };

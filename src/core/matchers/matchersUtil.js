@@ -1,6 +1,4 @@
 getJasmineRequireObj().MatchersUtil = function(j$) {
-  // TODO: convert all uses of j$.pp to use the injected pp
-
   /**
    * @class MatchersUtil
    * @classdesc Utilities for use in implementing matchers.<br>
@@ -31,27 +29,48 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
    * @since 2.0.0
    * @param {*} haystack The collection to search
    * @param {*} needle The value to search for
-   * @param [customTesters] An array of custom equality testers
    * @returns {boolean} True if `needle` was found in `haystack`
    */
-  MatchersUtil.prototype.contains = function(haystack, needle, customTesters) {
-    if (j$.isSet(haystack)) {
-      return haystack.has(needle);
-    }
-
-    if (
-      Object.prototype.toString.apply(haystack) === '[object Array]' ||
-      (!!haystack && !haystack.indexOf)
-    ) {
-      for (var i = 0; i < haystack.length; i++) {
-        if (this.equals(haystack[i], needle, customTesters)) {
-          return true;
-        }
-      }
+  MatchersUtil.prototype.contains = function(haystack, needle) {
+    if (!haystack) {
       return false;
     }
 
-    return !!haystack && haystack.indexOf(needle) >= 0;
+    if (j$.isSet(haystack)) {
+      // Try .has() first. It should be faster in cases where
+      // needle === something in haystack. Fall back to .equals() comparison
+      // if that fails.
+      if (haystack.has(needle)) {
+        return true;
+      }
+    }
+
+    if (j$.isIterable_(haystack) && !j$.isString_(haystack)) {
+      // Arrays, Sets, etc.
+      for (const candidate of haystack) {
+        if (this.equals(candidate, needle)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    if (haystack.indexOf) {
+      // Mainly strings
+      return haystack.indexOf(needle) >= 0;
+    }
+
+    if (j$.isNumber_(haystack.length)) {
+      // Objects that are shaped like arrays but aren't iterable
+      for (var i = 0; i < haystack.length; i++) {
+        if (this.equals(haystack[i], needle)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   };
 
   MatchersUtil.prototype.buildFailureMessage = function() {
@@ -88,19 +107,11 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
     b,
     aStack,
     bStack,
-    customTesters,
     diffBuilder
   ) {
     if (j$.isFunction_(b.valuesForDiff_)) {
       var values = b.valuesForDiff_(a, this.pp);
-      this.eq_(
-        values.other,
-        values.self,
-        aStack,
-        bStack,
-        customTesters,
-        diffBuilder
-      );
+      this.eq_(values.other, values.self, aStack, bStack, diffBuilder);
     } else {
       diffBuilder.recordMismatch();
     }
@@ -111,22 +122,18 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
     b,
     aStack,
     bStack,
-    customTesters,
     diffBuilder
   ) {
     var asymmetricA = j$.isAsymmetricEqualityTester_(a),
       asymmetricB = j$.isAsymmetricEqualityTester_(b),
-      shim,
       result;
 
     if (asymmetricA === asymmetricB) {
       return undefined;
     }
 
-    shim = j$.asymmetricEqualityTesterArgCompatShim(this, customTesters);
-
     if (asymmetricA) {
-      result = a.asymmetricMatch(b, shim);
+      result = a.asymmetricMatch(b, this);
       if (!result) {
         diffBuilder.recordMismatch();
       }
@@ -134,9 +141,9 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
     }
 
     if (asymmetricB) {
-      result = b.asymmetricMatch(a, shim);
+      result = b.asymmetricMatch(a, this);
       if (!result) {
-        this.asymmetricDiff_(a, b, aStack, bStack, customTesters, diffBuilder);
+        this.asymmetricDiff_(a, b, aStack, bStack, diffBuilder);
       }
       return result;
     }
@@ -149,41 +156,18 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
    * @since 2.0.0
    * @param {*} a The first value to compare
    * @param {*} b The second value to compare
-   * @param [customTesters] An array of custom equality testers
    * @returns {boolean} True if the values are equal
    */
-  MatchersUtil.prototype.equals = function(
-    a,
-    b,
-    customTestersOrDiffBuilder,
-    diffBuilderOrNothing
-  ) {
-    var customTesters, diffBuilder;
-
-    if (isDiffBuilder(customTestersOrDiffBuilder)) {
-      diffBuilder = customTestersOrDiffBuilder;
-    } else {
-      customTesters = customTestersOrDiffBuilder;
-      diffBuilder = diffBuilderOrNothing;
-    }
-
-    customTesters = customTesters || this.customTesters_;
+  MatchersUtil.prototype.equals = function(a, b, diffBuilder) {
     diffBuilder = diffBuilder || j$.NullDiffBuilder();
     diffBuilder.setRoots(a, b);
 
-    return this.eq_(a, b, [], [], customTesters, diffBuilder);
+    return this.eq_(a, b, [], [], diffBuilder);
   };
 
   // Equality function lovingly adapted from isEqual in
   //   [Underscore](http://underscorejs.org)
-  MatchersUtil.prototype.eq_ = function(
-    a,
-    b,
-    aStack,
-    bStack,
-    customTesters,
-    diffBuilder
-  ) {
+  MatchersUtil.prototype.eq_ = function(a, b, aStack, bStack, diffBuilder) {
     var result = true,
       self = this,
       i;
@@ -193,15 +177,14 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
       b,
       aStack,
       bStack,
-      customTesters,
       diffBuilder
     );
     if (!j$.util.isUndefined(asymmetricResult)) {
       return asymmetricResult;
     }
 
-    for (i = 0; i < customTesters.length; i++) {
-      var customTesterResult = customTesters[i](a, b);
+    for (i = 0; i < this.customTesters_.length; i++) {
+      var customTesterResult = this.customTesters_[i](a, b);
       if (!j$.util.isUndefined(customTesterResult)) {
         if (!customTesterResult) {
           diffBuilder.recordMismatch();
@@ -273,11 +256,10 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
         // If we have an instance of ArrayBuffer the Uint8Array ctor
         // will be defined as well
         return self.eq_(
-          new Uint8Array(a), // eslint-disable-line compat/compat
-          new Uint8Array(b), // eslint-disable-line compat/compat
+          new Uint8Array(a),
+          new Uint8Array(b),
           aStack,
           bStack,
-          customTesters,
           diffBuilder
         );
       // RegExps are compared by their source patterns and flags.
@@ -356,7 +338,6 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
                 i < bLength ? b[i] : void 0,
                 aStack,
                 bStack,
-                customTesters,
                 diffBuilder
               ) && result;
           }
@@ -401,14 +382,7 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
           if (
             j$.isAsymmetricEqualityTester_(mapKey) ||
             (j$.isAsymmetricEqualityTester_(cmpKey) &&
-              this.eq_(
-                mapKey,
-                cmpKey,
-                aStack,
-                bStack,
-                customTesters,
-                j$.NullDiffBuilder()
-              ))
+              this.eq_(mapKey, cmpKey, aStack, bStack, j$.NullDiffBuilder()))
           ) {
             mapValueB = b.get(cmpKey);
           } else {
@@ -419,7 +393,6 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
             mapValueB,
             aStack,
             bStack,
-            customTesters,
             j$.NullDiffBuilder()
           );
         }
@@ -470,7 +443,6 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
               otherValue,
               baseStack,
               otherStack,
-              customTesters,
               j$.NullDiffBuilder()
             );
             if (!found && prevStackSize !== baseStack.length) {
@@ -535,9 +507,7 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
       }
 
       diffBuilder.withPath(key, function() {
-        if (
-          !self.eq_(a[key], b[key], aStack, bStack, customTesters, diffBuilder)
-        ) {
+        if (!self.eq_(a[key], b[key], aStack, bStack, diffBuilder)) {
           result = false;
         }
       });
@@ -555,17 +525,16 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
   };
 
   function keys(obj, isArray) {
-    var allKeys = Object.keys
-      ? Object.keys(obj)
-      : (function(o) {
-          var keys = [];
-          for (var key in o) {
-            if (j$.util.has(o, key)) {
-              keys.push(key);
-            }
-          }
-          return keys;
-        })(obj);
+    var allKeys = (function(o) {
+      var keys = [];
+      for (var key in o) {
+        if (j$.util.has(o, key)) {
+          keys.push(key);
+        }
+      }
+      // eslint-disable-next-line compat/compat
+      return keys.concat(Object.getOwnPropertySymbols(o));
+    })(obj);
 
     if (!isArray) {
       return allKeys;
@@ -649,19 +618,39 @@ getJasmineRequireObj().MatchersUtil = function(j$) {
     return formatted;
   }
 
-  function isDiffBuilder(obj) {
-    return obj && typeof obj.recordMismatch === 'function';
-  }
-
   return MatchersUtil;
 };
 
 /**
  * @interface AsymmetricEqualityTester
  * @classdesc An asymmetric equality tester is an object that can match multiple
- * objects. Examples include jasmine.any() and jasmine.stringMatching().
- * User-defined asymmetric equality testers can also be defined and used in
- * expectations.
+ * objects. Examples include jasmine.any() and jasmine.stringMatching(). Jasmine
+ * includes a number of built-in asymmetric equality testers, such as
+ * {@link jasmine.objectContaining}. User-defined asymmetric equality testers are
+ * also supported.
+ *
+ * Asymmetric equality testers work with any matcher, including user-defined
+ * custom matchers, that uses {@link MatchersUtil#equals} or
+ * {@link MatchersUtil#contains}.
+ *
+ * @example
+ * function numberDivisibleBy(divisor) {
+ *   return {
+ *     asymmetricMatch: function(n) {
+ *       return typeof n === 'number' && n % divisor === 0;
+ *     },
+ *     jasmineToString: function() {
+ *       return `<a number divisible by ${divisor}>`;
+ *     }
+ *   };
+ * }
+ *
+ * var actual = {
+ *   n: 2,
+ *   otherFields: "don't care"
+ * };
+ *
+ * expect(actual).toEqual(jasmine.objectContaining({n: numberDivisibleBy(2)}));
  * @see custom_asymmetric_equality_testers
  * @since 2.0.0
  */

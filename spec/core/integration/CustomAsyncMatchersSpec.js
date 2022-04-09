@@ -1,4 +1,3 @@
-/* eslint-disable compat/compat */
 describe('Custom Async Matchers (Integration)', function() {
   var env;
 
@@ -12,8 +11,6 @@ describe('Custom Async Matchers (Integration)', function() {
   });
 
   it('passes the spec if the custom async matcher passes', function(done) {
-    jasmine.getEnv().requirePromises();
-
     env.it('spec using custom async matcher', function() {
       env.addAsyncMatchers({
         toBeReal: function() {
@@ -37,8 +34,6 @@ describe('Custom Async Matchers (Integration)', function() {
   });
 
   it('uses the negative compare function for a negative comparison, if provided', function(done) {
-    jasmine.getEnv().requirePromises();
-
     env.it('spec with custom negative comparison matcher', function() {
       env.addAsyncMatchers({
         toBeReal: function() {
@@ -65,8 +60,6 @@ describe('Custom Async Matchers (Integration)', function() {
   });
 
   it('generates messages with the same rules as built in matchers absent a custom message', function(done) {
-    jasmine.getEnv().requirePromises();
-
     env.it('spec with an expectation', function() {
       env.addAsyncMatchers({
         toBeReal: function() {
@@ -91,26 +84,20 @@ describe('Custom Async Matchers (Integration)', function() {
     env.execute(null, done);
   });
 
-  // TODO: remove this in the next major release.
-  it('passes the jasmine utility and current equality testers to the matcher factory', function(done) {
-    jasmine.getEnv().requirePromises();
-
-    var matcherFactory = function() {
+  it('passes the jasmine utility to the matcher factory', function(done) {
+    var matcherFactory = function(util) {
         return {
           compare: function() {
             return Promise.resolve({ pass: true });
           }
         };
       },
-      matcherFactorySpy = jasmine
-        .createSpy('matcherFactorySpy')
-        .and.callFake(matcherFactory),
-      customEqualityFn = function() {
-        return true;
-      };
+      matcherFactorySpy = jasmine.createSpy(
+        'matcherFactorySpy',
+        matcherFactory
+      );
 
     env.it('spec with expectation', function() {
-      env.addCustomEqualityTester(customEqualityFn);
       env.addAsyncMatchers({
         toBeReal: matcherFactorySpy
       });
@@ -120,8 +107,7 @@ describe('Custom Async Matchers (Integration)', function() {
 
     var specExpectations = function() {
       expect(matcherFactorySpy).toHaveBeenCalledWith(
-        jasmine.any(jasmineUnderTest.MatchersUtil),
-        [customEqualityFn]
+        jasmine.any(jasmineUnderTest.MatchersUtil)
       );
     };
 
@@ -130,8 +116,6 @@ describe('Custom Async Matchers (Integration)', function() {
   });
 
   it('provides custom equality testers to the matcher factory via matchersUtil', function(done) {
-    jasmine.getEnv().requirePromises();
-
     var matcherFactory = function(matchersUtil) {
         return {
           compare: function(actual, expected) {

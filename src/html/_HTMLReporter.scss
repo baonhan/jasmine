@@ -1,3 +1,5 @@
+@use "sass:math";
+
 $line-height: 14px;
 $margin-unit: 14px;
 
@@ -69,9 +71,6 @@ body {
   .jasmine-banner .jasmine-title {
     background: url('../../images/jasmine-horizontal.png') no-repeat;
     background: url('../../images/jasmine-horizontal.svg') no-repeat, none;
-    -moz-background-size: 100%;
-    -o-background-size: 100%;
-    -webkit-background-size: 100%;
     background-size: 100%;
     display: block;
     float: left;
@@ -117,7 +116,7 @@ body {
 
     li {
       display: inline-block;
-      height: ($line-height / 2) + 3;
+      height: math.div($line-height, 2) + 3;
       width: $line-height;
 
       font-size: 16px;
@@ -132,7 +131,7 @@ body {
       }
 
       &.jasmine-failed {
-        line-height: ($line-height / 2) + 2;
+        line-height: math.div($line-height, 2) + 2;
 
         &:before {
           color: $failing-color;
@@ -231,6 +230,8 @@ body {
     }
 
     &.jasmine-warning {
+      margin-top: $margin-unit;
+      margin-bottom: $margin-unit;
       background-color: $pending-color;
       color: $text-color;
     }
@@ -282,8 +283,8 @@ body {
       padding-left: 0;
 
       &.jasmine-suite {
-        margin-top: $margin-unit/2;
-        margin-bottom: $margin-unit/2
+        margin-top: math.div($margin-unit, 2);
+        margin-bottom: math.div($margin-unit, 2)
       }
     }
 
@@ -385,5 +386,44 @@ body {
     border: 1px solid #ddd;
     background: white;
     white-space: pre;
+  }
+
+  .jasmine-expander {
+    a {
+      display: block;
+      margin-left: $margin-unit;
+      color: blue;
+      text-decoration: underline;
+    }
+  }
+
+  .jasmine-expander-contents {
+    display: none;
+  }
+
+  .jasmine-expanded {
+    padding-bottom: 10px;
+  }
+
+  .jasmine-expanded .jasmine-expander-contents {
+    display: block;
+    margin-left: $margin-unit;
+    padding: 5px;
+  }
+
+  .jasmine-debug-log {
+    margin: 5px 0 0 0;
+    padding: 5px;
+    color: $light-text-color;
+    border: 1px solid #ddd;
+    background: white;
+
+    table {
+      border-spacing: 0;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
   }
 }

@@ -38,10 +38,11 @@ var getJasmineRequireObj = (function(jasmineGlobal) {
     j$.Any = jRequire.Any(j$);
     j$.Anything = jRequire.Anything(j$);
     j$.CallTracker = jRequire.CallTracker(j$);
-    j$.MockDate = jRequire.MockDate();
+    j$.MockDate = jRequire.MockDate(j$);
     j$.getClearStack = jRequire.clearStack(j$);
     j$.Clock = jRequire.Clock();
     j$.DelayedFunctionScheduler = jRequire.DelayedFunctionScheduler(j$);
+    j$.Deprecator = jRequire.Deprecator(j$);
     j$.Env = jRequire.Env(j$);
     j$.StackTrace = jRequire.StackTrace(j$);
     j$.ExceptionFormatter = jRequire.ExceptionFormatter(j$);
@@ -50,23 +51,22 @@ var getJasmineRequireObj = (function(jasmineGlobal) {
     j$.Expectation = jRequire.Expectation(j$);
     j$.buildExpectationResult = jRequire.buildExpectationResult(j$);
     j$.JsApiReporter = jRequire.JsApiReporter(j$);
-    j$.asymmetricEqualityTesterArgCompatShim = jRequire.asymmetricEqualityTesterArgCompatShim(
-      j$
-    );
     j$.makePrettyPrinter = jRequire.makePrettyPrinter(j$);
-    j$.pp = j$.makePrettyPrinter();
+    j$.basicPrettyPrinter_ = j$.makePrettyPrinter();
     j$.MatchersUtil = jRequire.MatchersUtil(j$);
-    j$.matchersUtil = new j$.MatchersUtil({
-      customTesters: [],
-      pp: j$.pp
-    });
-
     j$.ObjectContaining = jRequire.ObjectContaining(j$);
     j$.ArrayContaining = jRequire.ArrayContaining(j$);
     j$.ArrayWithExactContents = jRequire.ArrayWithExactContents(j$);
     j$.MapContaining = jRequire.MapContaining(j$);
     j$.SetContaining = jRequire.SetContaining(j$);
     j$.QueueRunner = jRequire.QueueRunner(j$);
+    j$.NeverSkipPolicy = jRequire.NeverSkipPolicy(j$);
+    j$.SkipAfterBeforeAllErrorPolicy = jRequire.SkipAfterBeforeAllErrorPolicy(
+      j$
+    );
+    j$.CompleteOnFirstErrorSkipPolicy = jRequire.CompleteOnFirstErrorSkipPolicy(
+      j$
+    );
     j$.ReportDispatcher = jRequire.ReportDispatcher(j$);
     j$.Spec = jRequire.Spec(j$);
     j$.Spy = jRequire.Spy(j$);
@@ -74,6 +74,7 @@ var getJasmineRequireObj = (function(jasmineGlobal) {
     j$.SpyRegistry = jRequire.SpyRegistry(j$);
     j$.SpyStrategy = jRequire.SpyStrategy(j$);
     j$.StringMatching = jRequire.StringMatching(j$);
+    j$.StringContaining = jRequire.StringContaining(j$);
     j$.UserContext = jRequire.UserContext(j$);
     j$.Suite = jRequire.Suite(j$);
     j$.Timer = jRequire.Timer();

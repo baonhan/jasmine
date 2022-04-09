@@ -10,7 +10,7 @@ getJasmineRequireObj().ArrayWithExactContents = function(j$) {
     if (!j$.isArray_(this.sample)) {
       throw new Error(
         'You must provide an array to arrayWithExactContents, not ' +
-          j$.pp(this.sample) +
+          j$.basicPrettyPrinter_(this.sample) +
           '.'
       );
     }

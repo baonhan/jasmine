@@ -12,24 +12,18 @@ module.exports = {
     'core/Suite.js',
     'core/**/*.js',
     'html/**/*.js',
-    '**/*.js'
+    '**/*.js',
+    '!boot/**.js'
   ],
   specDir: 'spec',
   specFiles: ['**/*[Ss]pec.js', '!npmPackage/**/*'],
   helpers: [
-    'helpers/asyncAwait.js',
     'helpers/generator.js',
     'helpers/BrowserFlags.js',
-    'helpers/checkForArrayBuffer.js',
-    'helpers/checkForMap.js',
-    'helpers/checkForSet.js',
-    'helpers/checkForSymbol.js',
-    'helpers/checkForUrl.js',
     'helpers/domHelpers.js',
     'helpers/integrationMatchers.js',
-    'helpers/promises.js',
-    'helpers/requireFastCheck.js',
-    'helpers/defineJasmineUnderTest.js'
+    'helpers/defineJasmineUnderTest.js',
+    'helpers/resetEnv.js'
   ],
   random: true,
   browser: {
@@ -47,7 +41,3 @@ module.exports = {
     }
   }
 };
-
-if (process.env.SKIP_JASMINE_BROWSER_FLAKES === 'true') {
-  module.exports.helpers.push('helpers/disableBrowserFlakes.js');
-}

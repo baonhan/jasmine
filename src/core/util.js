@@ -54,6 +54,8 @@ getJasmineRequireObj().util = function(j$) {
       // All falsey values are either primitives, `null`, or `undefined.
       if (!argsAsArray[i] || str.match(primitives)) {
         clonedArgs.push(argsAsArray[i]);
+      } else if (str === '[object Date]') {
+        clonedArgs.push(new Date(argsAsArray[i].valueOf()));
       } else {
         clonedArgs.push(j$.util.clone(argsAsArray[i]));
       }
@@ -90,20 +92,10 @@ getJasmineRequireObj().util = function(j$) {
   };
 
   util.errorWithStack = function errorWithStack() {
-    // Don't throw and catch if we don't have to, because it makes it harder
-    // for users to debug their code with exception breakpoints.
-    var error = new Error();
-
-    if (error.stack) {
-      return error;
-    }
-
-    // But some browsers (e.g. Phantom) only provide a stack trace if we throw.
-    try {
-      throw new Error();
-    } catch (e) {
-      return e;
-    }
+    // Don't throw and catch. That makes it harder for users to debug their
+    // code with exception breakpoints, and it's unnecessary since all
+    // supported environments populate new Error().stack
+    return new Error();
   };
 
   function callerFile() {
@@ -127,18 +119,18 @@ getJasmineRequireObj().util = function(j$) {
   StopIteration.prototype = Object.create(Error.prototype);
   StopIteration.prototype.constructor = StopIteration;
 
-  // useful for maps and sets since `forEach` is the only IE11-compatible way to iterate them
-  util.forEachBreakable = function(iterable, iteratee) {
-    function breakLoop() {
-      throw new StopIteration();
-    }
+  util.validateTimeout = function(timeout, msgPrefix) {
+    // Timeouts are implemented with setTimeout, which only supports a limited
+    // range of values. The limit is unspecified, as is the behavior when it's
+    // exceeded. But on all currently supported JS runtimes, setTimeout calls
+    // the callback immediately when the timeout is greater than 2147483647
+    // (the maximum value of a signed 32 bit integer).
+    var max = 2147483647;
 
-    try {
-      iterable.forEach(function(value, key) {
-        iteratee(breakLoop, value, key, iterable);
-      });
-    } catch (error) {
-      if (!(error instanceof StopIteration)) throw error;
+    if (timeout > max) {
+      throw new Error(
+        (msgPrefix || 'Timeout value') + ' cannot be greater than ' + max
+      );
     }
   };
 

@@ -75,14 +75,7 @@ getJasmineRequireObj().Expectation = function(j$) {
    * @namespace async-matchers
    */
   function AsyncExpectation(options) {
-    var global = options.global || j$.getGlobal();
     this.expector = new j$.Expector(options);
-
-    if (!global.Promise) {
-      throw new Error(
-        'expectAsync is unavailable because the environment does not support promises.'
-      );
-    }
 
     var customAsyncMatchers = options.customAsyncMatchers || {};
     for (var matcherName in customAsyncMatchers) {
@@ -126,6 +119,7 @@ getJasmineRequireObj().Expectation = function(j$) {
    * Otherwise evaluate the matcher.
    * @member
    * @name async-matchers#already
+   * @since 3.8.0
    * @type {async-matchers}
    * @example
    * await expectAsync(myPromise).already.toBeResolved();

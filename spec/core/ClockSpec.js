@@ -950,6 +950,25 @@ describe('Clock (acceptance)', function() {
     expect(timeoutDate).toEqual(baseTime.getTime() + 150);
   });
 
+  it('throws mockDate is called with a non-Date', function() {
+    var delayedFunctionScheduler = new jasmineUnderTest.DelayedFunctionScheduler(),
+      global = { Date: Date },
+      mockDate = new jasmineUnderTest.MockDate(global),
+      clock = new jasmineUnderTest.Clock(
+        { setTimeout: setTimeout },
+        function() {
+          return delayedFunctionScheduler;
+        },
+        mockDate
+      ),
+      env = jasmineUnderTest.getEnv();
+
+    expect(() => clock.mockDate(12345)).toThrowError(
+      'The argument to jasmine.clock().mockDate(), if specified, should be ' +
+        'a Date instance.'
+    );
+  });
+
   it('mocks the Date object and updates the date per delayed function', function() {
     var delayedFunctionScheduler = new jasmineUnderTest.DelayedFunctionScheduler(),
       global = { Date: Date },

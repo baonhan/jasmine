@@ -55,8 +55,7 @@ describe('npm package', function() {
   it('has jsFiles', function() {
     expect(this.packagedCore.files.jsFiles).toEqual([
       'jasmine.js',
-      'jasmine-html.js',
-      'json2.js'
+      'jasmine-html.js'
     ]);
 
     var packagedCore = this.packagedCore;
@@ -75,7 +74,7 @@ describe('npm package', function() {
   });
 
   it('has bootFiles', function() {
-    expect(this.packagedCore.files.bootFiles).toEqual(['boot.js']);
+    expect(this.packagedCore.files.bootFiles).toEqual(['boot0.js', 'boot1.js']);
     expect(this.packagedCore.files.nodeBootFiles).toEqual(['node_boot.js']);
 
     var packagedCore = this.packagedCore;
@@ -144,7 +143,7 @@ describe('npm package', function() {
         j;
 
       for (j = 0; j < dirents.length; j++) {
-        dirent = dirents[j];
+        const dirent = dirents[j];
 
         if (dirent.isDirectory()) {
           getFiles(path.resolve(dir, dirent.name));

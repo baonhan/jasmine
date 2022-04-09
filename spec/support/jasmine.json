@@ -5,19 +5,11 @@
     "npmPackage/**/*[Ss]pec.js"
   ],
   "helpers": [
-    "helpers/asyncAwait.js",
-    "helpers/generator.js",
-    "helpers/checkForArrayBuffer.js",
-    "helpers/checkForMap.js",
-    "helpers/checkForSet.js",
-    "helpers/checkForSymbol.js",
-    "helpers/checkForUrl.js",
     "helpers/domHelpers.js",
     "helpers/integrationMatchers.js",
-    "helpers/promises.js",
-    "helpers/requireFastCheck.js",
     "helpers/overrideConsoleLogForCircleCi.js",
-    "helpers/nodeDefineJasmineUnderTest.js"
+    "helpers/nodeDefineJasmineUnderTest.js",
+    "helpers/resetEnv.js"
   ],
   "random": true
 }

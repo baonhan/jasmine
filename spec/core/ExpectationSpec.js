@@ -40,24 +40,19 @@ describe('Expectation', function() {
       matchersUtil = {
         buildFailureMessage: jasmine.createSpy('buildFailureMessage')
       },
-      customEqualityTesters = ['a'],
       addExpectationResult = jasmine.createSpy('addExpectationResult'),
       expectation;
 
     expectation = jasmineUnderTest.Expectation.factory({
       matchersUtil: matchersUtil,
       customMatchers: matchers,
-      customEqualityTesters: customEqualityTesters,
       actual: 'an actual',
       addExpectationResult: addExpectationResult
     });
 
     expectation.toFoo('hello');
 
-    expect(matcherFactory).toHaveBeenCalledWith(
-      matchersUtil,
-      customEqualityTesters
-    );
+    expect(matcherFactory).toHaveBeenCalledWith(matchersUtil);
   });
 
   it("wraps matchers's compare functions, passing the actual and expected", function() {

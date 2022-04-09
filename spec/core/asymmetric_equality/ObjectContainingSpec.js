@@ -110,16 +110,7 @@ describe('ObjectContaining', function() {
     var matchersUtil = new jasmineUnderTest.MatchersUtil();
 
     var prototypeObject = { foo: 'fooVal' };
-    var obj;
-
-    if (Object.create) {
-      obj = Object.create(prototypeObject);
-    } else {
-      function Foo() {}
-      Foo.prototype = prototypeObject;
-      Foo.prototype.constructor = Foo;
-      obj = new Foo();
-    }
+    var obj = Object.create(prototypeObject);
 
     expect(containing.asymmetricMatch(obj, matchersUtil)).toBe(true);
   });
@@ -130,8 +121,8 @@ describe('ObjectContaining', function() {
       if (
         typeof a == 'string' &&
         typeof b == 'string' &&
-        a.substr(0, 3) == 'foo' &&
-        b.substr(0, 3) == 'foo'
+        a.slice(0, 3) == 'foo' &&
+        b.slice(0, 3) == 'foo'
       ) {
         return true;
       }

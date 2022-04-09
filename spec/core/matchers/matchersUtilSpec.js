@@ -7,78 +7,6 @@ describe('matchersUtil', function() {
   });
 
   describe('equals', function() {
-    describe('Properties', function() {
-      var fc;
-
-      beforeEach(function() {
-        fc = jasmine.getEnv().requireFastCheck();
-      });
-
-      function basicAnythingSettings() {
-        return {
-          key: fc.oneof(fc.string(), fc.constantFrom('k1', 'k2', 'k3')),
-          // Limiting depth & number of keys allows fast-check to try
-          // a lot more scalar values.
-          maxDepth: 2,
-          maxKeys: 5,
-          withBoxedValues: true,
-          withMap: true,
-          withSet: true
-        };
-      }
-
-      function numRuns() {
-        var many = 5000000;
-
-        // Be thorough but very slow when specified (usually on CI).
-        if (process.env.JASMINE_LONG_PROPERTY_TESTS) {
-          /* eslint-disable-next-line no-console */
-          console.log(
-            'Using',
-            many,
-            'runs of fc.assert because JASMINE_LONG_PROPERTY_TESTS was set. This may take several minutes.'
-          );
-          return many;
-        } else {
-          return undefined;
-        }
-      }
-
-      it('is symmetric', function() {
-        fc.assert(
-          fc.property(
-            fc.anything(basicAnythingSettings()),
-            fc.anything(basicAnythingSettings()),
-            function(a, b) {
-              return (
-                jasmineUnderTest.matchersUtil.equals(a, b) ===
-                jasmineUnderTest.matchersUtil.equals(b, a)
-              );
-            }
-          ),
-          {
-            numRuns: numRuns(),
-            examples: [[0, 5e-324]]
-          }
-        );
-      });
-
-      it('is reflexive', function() {
-        var anythingSettings = basicAnythingSettings();
-        anythingSettings.withMap = false;
-        fc.assert(
-          fc.property(fc.dedup(fc.anything(anythingSettings), 2), function(
-            values
-          ) {
-            return jasmineUnderTest.matchersUtil.equals(values[0], values[1]);
-          }),
-          {
-            numRuns: numRuns()
-          }
-        );
-      });
-    });
-
     it('passes for literals that are triple-equal', function() {
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
       expect(matchersUtil.equals(null, null)).toBe(true);
@@ -166,7 +94,7 @@ describe('matchersUtil', function() {
     });
 
     it('fails for Arrays that have different lengths', function() {
-      matchersUtil = new jasmineUnderTest.MatchersUtil();
+      const matchersUtil = new jasmineUnderTest.MatchersUtil();
       expect(matchersUtil.equals([1, 2], [1, 2, 3])).toBe(false);
     });
 
@@ -304,8 +232,8 @@ describe('matchersUtil', function() {
         return;
       }
 
-      var p1 = new Promise(function() {}), // eslint-disable-line compat/compat
-        p2 = new Promise(function() {}), // eslint-disable-line compat/compat
+      var p1 = new Promise(function() {}),
+        p2 = new Promise(function() {}),
         matchersUtil = new jasmineUnderTest.MatchersUtil();
 
       expect(matchersUtil.equals(p1, p1)).toBe(true);
@@ -439,13 +367,11 @@ describe('matchersUtil', function() {
     });
 
     it('passes when MapContaining is used', function() {
-      jasmine.getEnv().requireFunctioningMaps();
-
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var obj = new Map(); // eslint-disable-line compat/compat
+      var obj = new Map();
       obj.set(1, 2);
       obj.set('foo', 'bar');
-      var containing = new jasmineUnderTest.MapContaining(new Map()); // eslint-disable-line compat/compat
+      var containing = new jasmineUnderTest.MapContaining(new Map());
       containing.sample.set('foo', 'bar');
 
       expect(matchersUtil.equals(obj, containing)).toBe(true);
@@ -453,13 +379,11 @@ describe('matchersUtil', function() {
     });
 
     it('passes when SetContaining is used', function() {
-      jasmine.getEnv().requireFunctioningSets();
-
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var obj = new Set(); // eslint-disable-line compat/compat
+      var obj = new Set();
       obj.add(1);
       obj.add('foo');
-      var containing = new jasmineUnderTest.SetContaining(new Set()); // eslint-disable-line compat/compat
+      var containing = new jasmineUnderTest.SetContaining(new Set());
       containing.sample.add(1);
 
       expect(matchersUtil.equals(obj, containing)).toBe(true);
@@ -499,17 +423,7 @@ describe('matchersUtil', function() {
       ).toBe(true);
     });
 
-    it('passes when a custom equality matcher passed to equals returns true', function() {
-      // TODO: remove this in the next major release.
-      var tester = function(a, b) {
-          return true;
-        },
-        matchersUtil = new jasmineUnderTest.MatchersUtil();
-
-      expect(matchersUtil.equals(1, 2, [tester])).toBe(true);
-    });
-
-    it('passes when a custom equality matcher passed to the constructor returns true', function() {
+    it('passes when a custom equality matcher returns true', function() {
       var tester = function(a, b) {
           return true;
         },
@@ -526,19 +440,7 @@ describe('matchersUtil', function() {
       expect(matchersUtil.equals({}, {})).toBe(true);
     });
 
-    describe("when a custom equality matcher is passed to equals that returns 'undefined'", function() {
-      // TODO: remove this in the next major release.
-      var tester = function(a, b) {
-        return jasmine.undefined;
-      };
-
-      it('passes for two empty Objects', function() {
-        var matchersUtil = new jasmineUnderTest.MatchersUtil();
-        expect(matchersUtil.equals({}, {}, [tester])).toBe(true);
-      });
-    });
-
-    describe("when a custom equality matcher is passed to the constructor that returns 'undefined'", function() {
+    describe("when a custom equality matcher returns 'undefined'", function() {
       var tester = function(a, b) {
         return jasmine.undefined;
       };
@@ -552,17 +454,7 @@ describe('matchersUtil', function() {
       });
     });
 
-    it('fails for equivalents when a custom equality matcher passed to equals returns false', function() {
-      // TODO: remove this in the next major release.
-      var tester = function(a, b) {
-          return false;
-        },
-        matchersUtil = new jasmineUnderTest.MatchersUtil();
-
-      expect(matchersUtil.equals(1, 1, [tester])).toBe(false);
-    });
-
-    it('fails for equivalents when a custom equality matcher passed to the constructor returns false', function() {
+    it('fails for equivalents when a custom equality matcher returns false', function() {
       var tester = function(a, b) {
           return false;
         },
@@ -574,27 +466,7 @@ describe('matchersUtil', function() {
       expect(matchersUtil.equals(1, 1)).toBe(false);
     });
 
-    it('passes for an asymmetric equality tester that returns true when a custom equality tester passed to equals return false', function() {
-      // TODO: remove this in the next major release.
-      var asymmetricTester = {
-          asymmetricMatch: function(other) {
-            return true;
-          }
-        },
-        symmetricTester = function(a, b) {
-          return false;
-        },
-        matchersUtil = new jasmineUnderTest.MatchersUtil();
-
-      expect(
-        matchersUtil.equals(asymmetricTester, true, [symmetricTester])
-      ).toBe(true);
-      expect(
-        matchersUtil.equals(true, asymmetricTester, [symmetricTester])
-      ).toBe(true);
-    });
-
-    it('passes for an asymmetric equality tester that returns true when a custom equality tester passed to the constructor return false', function() {
+    it('passes for an asymmetric equality tester that returns true when a custom equality tester return false', function() {
       var asymmetricTester = {
           asymmetricMatch: function(other) {
             return true;
@@ -610,45 +482,6 @@ describe('matchersUtil', function() {
 
       expect(matchersUtil.equals(asymmetricTester, true)).toBe(true);
       expect(matchersUtil.equals(true, asymmetricTester)).toBe(true);
-    });
-
-    describe('The compatibility shim passed to asymmetric equality testers', function() {
-      describe('When equals is called with custom equality testers', function() {
-        it('is both a matchersUtil and the custom equality testers passed to equals', function() {
-          var asymmetricTester = jasmine.createSpyObj('tester', [
-              'asymmetricMatch'
-            ]),
-            symmetricTester = function() {},
-            matchersUtil = new jasmineUnderTest.MatchersUtil(),
-            shim;
-
-          matchersUtil.equals(true, asymmetricTester, [symmetricTester]);
-          shim = asymmetricTester.asymmetricMatch.calls.argsFor(0)[1];
-          expect(shim).toEqual(jasmine.any(jasmineUnderTest.MatchersUtil));
-          expect(shim.length).toEqual(1);
-          expect(shim[0]).toEqual(symmetricTester);
-        });
-      });
-
-      describe('When equals is called with custom equality testers', function() {
-        it('is both a matchersUtil and the custom equality testers passed to the constructor', function() {
-          var asymmetricTester = jasmine.createSpyObj('tester', [
-              'asymmetricMatch'
-            ]),
-            symmetricTester = function() {},
-            matchersUtil = new jasmineUnderTest.MatchersUtil({
-              customTesters: [symmetricTester],
-              pp: function() {}
-            }),
-            shim;
-
-          matchersUtil.equals(true, asymmetricTester);
-          shim = asymmetricTester.asymmetricMatch.calls.argsFor(0)[1];
-          expect(shim).toEqual(jasmine.any(jasmineUnderTest.MatchersUtil));
-          expect(shim.length).toEqual(1);
-          expect(shim[0]).toEqual(symmetricTester);
-        });
-      });
     });
 
     it('passes when an Any is compared to an Any that checks for the same type', function() {
@@ -682,19 +515,16 @@ describe('matchersUtil', function() {
     });
 
     it('passes when comparing two empty sets', function() {
-      jasmine.getEnv().requireFunctioningSets();
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      expect(matchersUtil.equals(new Set(), new Set())).toBe(true); // eslint-disable-line compat/compat
+      expect(matchersUtil.equals(new Set(), new Set())).toBe(true);
     });
 
     it('passes when comparing identical sets', function() {
-      jasmine.getEnv().requireFunctioningSets();
-
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var setA = new Set(); // eslint-disable-line compat/compat
+      var setA = new Set();
       setA.add(6);
       setA.add(5);
-      var setB = new Set(); // eslint-disable-line compat/compat
+      var setB = new Set();
       setB.add(6);
       setB.add(5);
 
@@ -702,13 +532,11 @@ describe('matchersUtil', function() {
     });
 
     it('passes when comparing identical sets with different insertion order and simple elements', function() {
-      jasmine.getEnv().requireFunctioningSets();
-
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var setA = new Set(); // eslint-disable-line compat/compat
+      var setA = new Set();
       setA.add(3);
       setA.add(6);
-      var setB = new Set(); // eslint-disable-line compat/compat
+      var setB = new Set();
       setB.add(6);
       setB.add(3);
 
@@ -716,26 +544,24 @@ describe('matchersUtil', function() {
     });
 
     it('passes when comparing identical sets with different insertion order and complex elements 1', function() {
-      jasmine.getEnv().requireFunctioningSets();
-
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var setA1 = new Set(); // eslint-disable-line compat/compat
+      var setA1 = new Set();
       setA1.add(['a', 3]);
       setA1.add([6, 1]);
-      var setA2 = new Set(); // eslint-disable-line compat/compat
+      var setA2 = new Set();
       setA1.add(['y', 3]);
       setA1.add([6, 1]);
-      var setA = new Set(); // eslint-disable-line compat/compat
+      var setA = new Set();
       setA.add(setA1);
       setA.add(setA2);
 
-      var setB1 = new Set(); // eslint-disable-line compat/compat
+      var setB1 = new Set();
       setB1.add([6, 1]);
       setB1.add(['a', 3]);
-      var setB2 = new Set(); // eslint-disable-line compat/compat
+      var setB2 = new Set();
       setB1.add([6, 1]);
       setB1.add(['y', 3]);
-      var setB = new Set(); // eslint-disable-line compat/compat
+      var setB = new Set();
       setB.add(setB1);
       setB.add(setB2);
 
@@ -743,13 +569,11 @@ describe('matchersUtil', function() {
     });
 
     it('passes when comparing identical sets with different insertion order and complex elements 2', function() {
-      jasmine.getEnv().requireFunctioningSets();
-
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var setA = new Set(); // eslint-disable-line compat/compat
+      var setA = new Set();
       setA.add([[1, 2], [3, 4]]);
       setA.add([[5, 6], [7, 8]]);
-      var setB = new Set(); // eslint-disable-line compat/compat
+      var setB = new Set();
       setB.add([[5, 6], [7, 8]]);
       setB.add([[1, 2], [3, 4]]);
 
@@ -757,13 +581,12 @@ describe('matchersUtil', function() {
     });
 
     it('fails for sets with different elements', function() {
-      jasmine.getEnv().requireFunctioningSets();
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var setA = new Set(); // eslint-disable-line compat/compat
+      var setA = new Set();
       setA.add(6);
       setA.add(3);
       setA.add(5);
-      var setB = new Set(); // eslint-disable-line compat/compat
+      var setB = new Set();
       setB.add(6);
       setB.add(4);
       setB.add(5);
@@ -772,12 +595,11 @@ describe('matchersUtil', function() {
     });
 
     it('fails for sets of different size', function() {
-      jasmine.getEnv().requireFunctioningSets();
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var setA = new Set(); // eslint-disable-line compat/compat
+      var setA = new Set();
       setA.add(6);
       setA.add(3);
-      var setB = new Set(); // eslint-disable-line compat/compat
+      var setB = new Set();
       setB.add(6);
       setB.add(4);
       setB.add(5);
@@ -786,40 +608,36 @@ describe('matchersUtil', function() {
     });
 
     it('passes when comparing two empty maps', function() {
-      jasmine.getEnv().requireFunctioningMaps();
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      expect(matchersUtil.equals(new Map(), new Map())).toBe(true); // eslint-disable-line compat/compat
+      expect(matchersUtil.equals(new Map(), new Map())).toBe(true);
     });
 
     it('passes when comparing identical maps', function() {
-      jasmine.getEnv().requireFunctioningMaps();
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var mapA = new Map(); // eslint-disable-line compat/compat
+      var mapA = new Map();
       mapA.set(6, 5);
-      var mapB = new Map(); // eslint-disable-line compat/compat
+      var mapB = new Map();
       mapB.set(6, 5);
       expect(matchersUtil.equals(mapA, mapB)).toBe(true);
     });
 
     it('passes when comparing identical maps with different insertion order', function() {
-      jasmine.getEnv().requireFunctioningMaps();
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var mapA = new Map(); // eslint-disable-line compat/compat
+      var mapA = new Map();
       mapA.set('a', 3);
       mapA.set(6, 1);
-      var mapB = new Map(); // eslint-disable-line compat/compat
+      var mapB = new Map();
       mapB.set(6, 1);
       mapB.set('a', 3);
       expect(matchersUtil.equals(mapA, mapB)).toBe(true);
     });
 
     it('fails for maps with different elements', function() {
-      jasmine.getEnv().requireFunctioningMaps();
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var mapA = new Map(); // eslint-disable-line compat/compat
+      var mapA = new Map();
       mapA.set(6, 3);
       mapA.set(5, 1);
-      var mapB = new Map(); // eslint-disable-line compat/compat
+      var mapB = new Map();
       mapB.set(6, 4);
       mapB.set(5, 1);
 
@@ -827,93 +645,75 @@ describe('matchersUtil', function() {
     });
 
     it('fails for maps of different size', function() {
-      jasmine.getEnv().requireFunctioningMaps();
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var mapA = new Map(); // eslint-disable-line compat/compat
+      var mapA = new Map();
       mapA.set(6, 3);
-      var mapB = new Map(); // eslint-disable-line compat/compat
+      var mapB = new Map();
       mapB.set(6, 4);
       mapB.set(5, 1);
       expect(matchersUtil.equals(mapA, mapB)).toBe(false);
     });
 
     it('passes when comparing two identical URLs', function() {
-      jasmine.getEnv().requireUrls();
-
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
 
       expect(
         matchersUtil.equals(
-          // eslint-disable-next-line compat/compat
           new URL('http://localhost/1'),
-          // eslint-disable-next-line compat/compat
           new URL('http://localhost/1')
         )
       ).toBe(true);
     });
 
     it('fails when comparing two different URLs', function() {
-      jasmine.getEnv().requireUrls();
-
       var matchersUtil = new jasmineUnderTest.MatchersUtil(),
-        // eslint-disable-next-line compat/compat
         url1 = new URL('http://localhost/1');
 
-      // eslint-disable-next-line compat/compat
       expect(matchersUtil.equals(url1, new URL('http://localhost/2'))).toBe(
         false
       );
-      // eslint-disable-next-line compat/compat
       expect(matchersUtil.equals(url1, new URL('http://localhost/1?foo'))).toBe(
         false
       );
-      // eslint-disable-next-line compat/compat
       expect(matchersUtil.equals(url1, new URL('http://localhost/1#foo'))).toBe(
         false
       );
-      // eslint-disable-next-line compat/compat
       expect(matchersUtil.equals(url1, new URL('https://localhost/1'))).toBe(
         false
       );
       expect(
-        // eslint-disable-next-line compat/compat
         matchersUtil.equals(url1, new URL('http://localhost:8080/1'))
       ).toBe(false);
-      // eslint-disable-next-line compat/compat
       expect(matchersUtil.equals(url1, new URL('http://example.com/1'))).toBe(
         false
       );
     });
 
     it('passes for ArrayBuffers with same length and content', function() {
-      jasmine.getEnv().requireFunctioningArrayBuffers();
-      var buffer1 = new ArrayBuffer(4); // eslint-disable-line compat/compat
-      var buffer2 = new ArrayBuffer(4); // eslint-disable-line compat/compat
-      expect(jasmineUnderTest.matchersUtil.equals(buffer1, buffer2)).toBe(true);
+      var buffer1 = new ArrayBuffer(4);
+      var buffer2 = new ArrayBuffer(4);
+      var matchersUtil = new jasmineUnderTest.MatchersUtil();
+      expect(matchersUtil.equals(buffer1, buffer2)).toBe(true);
     });
 
     it('fails for ArrayBuffers with same length but different content', function() {
-      jasmine.getEnv().requireFunctioningArrayBuffers();
-      var buffer1 = new ArrayBuffer(4); // eslint-disable-line compat/compat
-      var buffer2 = new ArrayBuffer(4); // eslint-disable-line compat/compat
-      var array1 = new Uint8Array(buffer1); // eslint-disable-line compat/compat
+      var buffer1 = new ArrayBuffer(4);
+      var buffer2 = new ArrayBuffer(4);
+      var array1 = new Uint8Array(buffer1);
       array1[0] = 1;
-      expect(jasmineUnderTest.matchersUtil.equals(buffer1, buffer2)).toBe(
-        false
-      );
+      var matchersUtil = new jasmineUnderTest.MatchersUtil();
+      expect(matchersUtil.equals(buffer1, buffer2)).toBe(false);
     });
 
     describe('Typed arrays', function() {
       it('fails for typed arrays of same length and contents but different types', function() {
-        // eslint-disable-next-line compat/compat
+        var matchersUtil = new jasmineUnderTest.MatchersUtil();
         var a1 = new Int8Array(1);
-        // eslint-disable-next-line compat/compat
         var a2 = new Uint8Array(1);
         a1[0] = a2[0] = 0;
-        expect(jasmineUnderTest.matchersUtil.equals(a1, a2)).toBe(false);
+        expect(matchersUtil.equals(a1, a2)).toBe(false);
       });
 
-      // eslint-disable-next-line compat/compat
       [
         'Int8Array',
         'Uint8Array',
@@ -925,59 +725,50 @@ describe('matchersUtil', function() {
         'Float32Array',
         'Float64Array'
       ].forEach(function(typeName) {
-        function requireType() {
-          var TypedArrayCtor = jasmine.getGlobal()[typeName];
-
-          if (!TypedArrayCtor) {
-            pending('Browser does not support ' + typeName);
-          }
-
-          return TypedArrayCtor;
-        }
+        var TypedArrayCtor = jasmine.getGlobal()[typeName];
 
         it(
           'passes for ' + typeName + 's with same length and content',
           function() {
-            var TypedArrayCtor = requireType();
+            var matchersUtil = new jasmineUnderTest.MatchersUtil();
             var a1 = new TypedArrayCtor(2);
             var a2 = new TypedArrayCtor(2);
             a1[0] = a2[0] = 0;
             a1[1] = a2[1] = 1;
-            expect(jasmineUnderTest.matchersUtil.equals(a1, a2)).toBe(true);
+            expect(matchersUtil.equals(a1, a2)).toBe(true);
           }
         );
 
         it('fails for ' + typeName + 's with different length', function() {
-          var TypedArrayCtor = requireType();
+          var matchersUtil = new jasmineUnderTest.MatchersUtil();
           var a1 = new TypedArrayCtor(2);
           var a2 = new TypedArrayCtor(1);
           a1[0] = a1[1] = a2[0] = 0;
-          expect(jasmineUnderTest.matchersUtil.equals(a1, a2)).toBe(false);
+          expect(matchersUtil.equals(a1, a2)).toBe(false);
         });
 
         it(
           'fails for ' + typeName + 's with same length but different content',
           function() {
-            var TypedArrayCtor = requireType();
+            var matchersUtil = new jasmineUnderTest.MatchersUtil();
             var a1 = new TypedArrayCtor(1);
             var a2 = new TypedArrayCtor(1);
             a1[0] = 0;
             a2[0] = 1;
-            expect(jasmineUnderTest.matchersUtil.equals(a1, a2)).toBe(false);
+            expect(matchersUtil.equals(a1, a2)).toBe(false);
           }
         );
 
         it('checks nonstandard properties of ' + typeName, function() {
-          var TypedArrayCtor = requireType();
+          var matchersUtil = new jasmineUnderTest.MatchersUtil();
           var a1 = new TypedArrayCtor(1);
           var a2 = new TypedArrayCtor(1);
           a1[0] = a2[0] = 0;
           a1.extra = 'yes';
-          expect(jasmineUnderTest.matchersUtil.equals(a1, a2)).toBe(false);
+          expect(matchersUtil.equals(a1, a2)).toBe(false);
         });
 
         it('works with custom equality testers with ' + typeName, function() {
-          var TypedArrayCtor = requireType();
           var a1 = new TypedArrayCtor(1);
           var a2 = new TypedArrayCtor(1);
           var matchersUtil = new jasmineUnderTest.MatchersUtil({
@@ -1008,36 +799,39 @@ describe('matchersUtil', function() {
           'passes for ' + typeName + 's with same length and content',
           function() {
             var TypedArrayCtor = requireType();
+            var matchersUtil = new jasmineUnderTest.MatchersUtil();
             var a1 = new TypedArrayCtor(2);
             var a2 = new TypedArrayCtor(2);
             // eslint-disable-next-line compat/compat
             a1[0] = a2[0] = BigInt(0);
             // eslint-disable-next-line compat/compat
             a1[1] = a2[1] = BigInt(1);
-            expect(jasmineUnderTest.matchersUtil.equals(a1, a2)).toBe(true);
+            expect(matchersUtil.equals(a1, a2)).toBe(true);
           }
         );
 
         it('fails for ' + typeName + 's with different length', function() {
           var TypedArrayCtor = requireType();
+          var matchersUtil = new jasmineUnderTest.MatchersUtil();
           var a1 = new TypedArrayCtor(2);
           var a2 = new TypedArrayCtor(1);
           // eslint-disable-next-line compat/compat
           a1[0] = a1[1] = a2[0] = BigInt(0);
-          expect(jasmineUnderTest.matchersUtil.equals(a1, a2)).toBe(false);
+          expect(matchersUtil.equals(a1, a2)).toBe(false);
         });
 
         it(
           'fails for ' + typeName + 's with same length but different content',
           function() {
             var TypedArrayCtor = requireType();
+            var matchersUtil = new jasmineUnderTest.MatchersUtil();
             var a1 = new TypedArrayCtor(2);
             var a2 = new TypedArrayCtor(2);
             // eslint-disable-next-line compat/compat
             a1[0] = a1[1] = a2[0] = BigInt(0);
             // eslint-disable-next-line compat/compat
             a2[1] = BigInt(1);
-            expect(jasmineUnderTest.matchersUtil.equals(a1, a2)).toBe(false);
+            expect(matchersUtil.equals(a1, a2)).toBe(false);
           }
         );
       });
@@ -1048,11 +842,16 @@ describe('matchersUtil', function() {
         Array.prototype,
         'findIndex'
       );
-      if (!findIndexDescriptor) {
-        return;
-      }
 
       beforeEach(function() {
+        if (!findIndexDescriptor) {
+          jasmine
+            .getEnv()
+            .pending(
+              'Environment does not have a property descriptor for Array.prototype.findIndex'
+            );
+        }
+
         Object.defineProperty(Array.prototype, 'findIndex', {
           enumerable: true,
           value: function(predicate) {
@@ -1115,12 +914,13 @@ describe('matchersUtil', function() {
             'recordMismatch',
             'withPath',
             'setRoots'
-          ]);
+          ]),
+          matchersUtil = new jasmineUnderTest.MatchersUtil();
 
         diffBuilder.withPath.and.callFake(function(p, block) {
           block();
         });
-        jasmineUnderTest.matchersUtil.equals(actual, expected, [], diffBuilder);
+        matchersUtil.equals(actual, expected, diffBuilder);
 
         expect(diffBuilder.setRoots).toHaveBeenCalledWith(actual, expected);
         expect(diffBuilder.withPath).toHaveBeenCalledWith(
@@ -1142,11 +942,13 @@ describe('matchersUtil', function() {
             'recordMismatch',
             'withPath',
             'setRoots'
-          ]);
+          ]),
+          matchersUtil = new jasmineUnderTest.MatchersUtil();
+
         diffBuilder.withPath.and.callFake(function(p, block) {
           block();
         });
-        jasmineUnderTest.matchersUtil.equals(actual, expected, [], diffBuilder);
+        matchersUtil.equals(actual, expected, diffBuilder);
 
         expect(diffBuilder.setRoots).toHaveBeenCalledWith(actual, expected);
         expect(diffBuilder.withPath).toHaveBeenCalledWith(
@@ -1155,26 +957,6 @@ describe('matchersUtil', function() {
         );
         expect(diffBuilder.recordMismatch).toHaveBeenCalledWith();
       });
-    });
-
-    it('uses a diffBuilder if one is provided as the fourth argument', function() {
-      // TODO: remove this in the next major release.
-      var diffBuilder = new jasmineUnderTest.DiffBuilder(),
-        matchersUtil = new jasmineUnderTest.MatchersUtil();
-
-      spyOn(diffBuilder, 'recordMismatch');
-      spyOn(diffBuilder, 'withPath').and.callThrough();
-
-      matchersUtil.equals([1], [2], [], diffBuilder);
-      expect(diffBuilder.withPath).toHaveBeenCalledWith(
-        'length',
-        jasmine.any(Function)
-      );
-      expect(diffBuilder.withPath).toHaveBeenCalledWith(
-        0,
-        jasmine.any(Function)
-      );
-      expect(diffBuilder.recordMismatch).toHaveBeenCalledWith();
     });
 
     it('uses a diffBuilder if one is provided as the third argument', function() {
@@ -1226,17 +1008,7 @@ describe('matchersUtil', function() {
       ).toBe(true);
     });
 
-    it('uses custom equality testers if passed to contains and actual is an Array', function() {
-      // TODO: remove this in the next major release.
-      var customTester = function(a, b) {
-          return true;
-        },
-        matchersUtil = new jasmineUnderTest.MatchersUtil();
-
-      expect(matchersUtil.contains([1, 2], 3, [customTester])).toBe(true);
-    });
-
-    it('uses custom equality testers if passed to the constructor and actual is an Array', function() {
+    it('uses custom equality testers if actual is an Array', function() {
       var customTester = function(a, b) {
           return true;
         },
@@ -1258,7 +1030,7 @@ describe('matchersUtil', function() {
       expect(matchersUtil.contains(null, 'A')).toBe(false);
     });
 
-    it('passes with array-like objects', function() {
+    it('works with array-like objects that implement iterable', function() {
       var capturedArgs = null,
         matchersUtil = new jasmineUnderTest.MatchersUtil();
 
@@ -1268,28 +1040,36 @@ describe('matchersUtil', function() {
 
       testFunction('foo', 'bar');
       expect(matchersUtil.contains(capturedArgs, 'bar')).toBe(true);
+      expect(matchersUtil.contains(capturedArgs, 'baz')).toBe(false);
+    });
+
+    it("passes with array-like objects that don't implement iterable", function() {
+      const arrayLike = {
+        0: 'a',
+        1: 'b',
+        length: 2
+      };
+      const matchersUtil = new jasmineUnderTest.MatchersUtil();
+
+      expect(matchersUtil.contains(arrayLike, 'b')).toBe(true);
+      expect(matchersUtil.contains(arrayLike, 'c')).toBe(false);
     });
 
     it('passes for set members', function() {
-      jasmine.getEnv().requireFunctioningSets();
-
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
       var setItem = { foo: 'bar' };
-      var set = new Set(); // eslint-disable-line compat/compat
+      var set = new Set();
       set.add(setItem);
 
       expect(matchersUtil.contains(set, setItem)).toBe(true);
     });
 
-    // documenting current behavior
-    it('fails (!) for objects that equal to a set member', function() {
-      jasmine.getEnv().requireFunctioningSets();
-
+    it('passes for objects that equal to a set member', function() {
       var matchersUtil = new jasmineUnderTest.MatchersUtil();
-      var set = new Set(); // eslint-disable-line compat/compat
+      var set = new Set();
       set.add({ foo: 'bar' });
 
-      expect(matchersUtil.contains(set, { foo: 'bar' })).toBe(false);
+      expect(matchersUtil.contains(set, { foo: 'bar' })).toBe(true);
     });
   });
 
