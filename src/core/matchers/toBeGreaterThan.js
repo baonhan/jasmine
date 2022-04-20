@@ -18,5 +18,7 @@ getJasmineRequireObj().toBeGreaterThan = function() {
     };
   }
 
+  function test() {}
+
   return toBeGreaterThan;
 };
